@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const xlsx = require('xlsx')
 const kvZusatzbeitrag = 1.1
 const startBruttoArbeitnehmer = 5000
 const endBruttoArbeitnehmer = 100000
@@ -91,10 +92,20 @@ async function main() {
     const page = await browser.newPage()
     page.setDefaultTimeout(45000)
 
+    // init result array
+    let ws_data = [
+        ["Lohnkosten"],
+        ["Brutto AN"],
+        ["Netto AN"],
+        ["Gesamtabgabenlast an Netto"],
+        ["Abgabenlast AN"],
+        ["Anteil Steuern an Lohnkosten"],
+        ["Anteil Sozialabgaben an Lohnkosten"]
+    ]
+
     for (let bruttoArbeitnehmer = startBruttoArbeitnehmer; bruttoArbeitnehmer < endBruttoArbeitnehmer; bruttoArbeitnehmer += step) {
         let abgabenlastRes = await getAbgabenlast(page, bruttoArbeitnehmer)
 
-        // ugly output but I'm going to pipe it to a file so I can copy it to excel
         console.log(abgabenlastRes.bruttoArbeitgeber); // Brutto AG (Die gesamten Lohnkosten die der AG traegt)
         console.log(bruttoArbeitnehmer); // Brutto AN
         console.log(abgabenlastRes.nettoArbeitnehmer); // Netto AN
@@ -102,9 +113,24 @@ async function main() {
         console.log(abgabenlastRes.abgabenlastArbeitnehmer); // Abgabenlast AN (Die vom AN geleisteten Abgaben/Steuern im Verhaeltnis zum Nettolohn des AN)
         console.log(abgabenlastRes.anteilSteuernArbeitgeber); // Anteil Steuern AG (Die Steuern im Verhaeltnis zu den Lohnkosten)
         console.log(abgabenlastRes.anteilSozialabgabenArbeitgeber + "\n"); // Anteil Sozialabgaben AG (Die gesamten Sozialabgaben im Verhaeltnis zu den Lohnkosten)
+
+        ws_data[0].push(abgabenlastRes.bruttoArbeitgeber)
+        ws_data[1].push(bruttoArbeitnehmer)
+        ws_data[2].push(abgabenlastRes.nettoArbeitnehmer)
+        ws_data[3].push(abgabenlastRes.abgabenlastArbeitgeber)
+        ws_data[4].push(abgabenlastRes.abgabenlastArbeitnehmer)
+        ws_data[5].push(abgabenlastRes.anteilSteuernArbeitgeber)
+        ws_data[6].push(abgabenlastRes.anteilSozialabgabenArbeitgeber)
     }
 
     await browser.close()
+
+    // init excel workbook/sheet and write results to the xlsx file
+    let wb = xlsx.utils.book_new();
+    const ws_name = "abgabenlast";
+    var ws = xlsx.utils.aoa_to_sheet(ws_data);
+    xlsx.utils.book_append_sheet(wb, ws, ws_name);
+    xlsx.writeFile(wb, 'out.xlsx');
 }
 
 main()
