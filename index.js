@@ -1,8 +1,10 @@
 const puppeteer = require('puppeteer');
 const kvZusatzbeitrag = 1.1
 const startBruttoArbeitnehmer = 5000
-const endBruttoArbeitnehmer = 200000
+const endBruttoArbeitnehmer = 100000
 const step = 1000
+const sozialabgabenSchwelle = 5400
+const privateKvSchwelle = 62550
 
 
 async function getAbgabenlast(page, bruttoArbeitnehmer) {
@@ -20,7 +22,7 @@ async function getAbgabenlast(page, bruttoArbeitnehmer) {
         el.value = bruttoArbeitnehmer
     }, bruttoArbeitnehmer)
 
-    // jährlich
+    // jaehrlich
     await page.waitForSelector('.extended_form > #form_period > .col-xs-6 > .radio:nth-child(2) > label')
     await page.click('.extended_form > #form_period > .col-xs-6 > .radio:nth-child(2) > label')
 
@@ -50,8 +52,9 @@ async function getAbgabenlast(page, bruttoArbeitnehmer) {
     res.bruttoArbeitgeber = parseFloat(await page.$eval('#primary > table.table.table-condesed > tbody > tr:nth-child(7) > td.text-right.view-year', el => el.innerText.slice(0, -2).replace('.', '').replace(',', '.')))
 
     // Netto AN
-    await page.waitForSelector('#primary > table:nth-child(7) > tbody > tr.hidden-xs.bg-info > td.b.text-right.view-year')
-    res.nettoArbeitnehmer = parseFloat(await page.$eval('#primary > table:nth-child(7) > tbody > tr.hidden-xs.bg-info > td.b.text-right.view-year', el => el.innerText.slice(0, -2).replace('.', '').replace(',', '.')))
+    const childIdPrivateKv = bruttoArbeitnehmer >= privateKvSchwelle ? 6 : 7
+    await page.waitForSelector(`#primary > table:nth-child(${childIdPrivateKv}) > tbody > tr.hidden-xs.bg-info > td.b.text-right.view-year`)
+    res.nettoArbeitnehmer = parseFloat(await page.$eval(`#primary > table:nth-child(${childIdPrivateKv}) > tbody > tr.hidden-xs.bg-info > td.b.text-right.view-year`, el => el.innerText.slice(0, -2).replace('.', '').replace(',', '.')))
 
     // Abgabenlast AG
     res.abgabenlastArbeitgeber = (res.nettoArbeitnehmer / res.bruttoArbeitgeber - 1) * (-100)
@@ -60,13 +63,13 @@ async function getAbgabenlast(page, bruttoArbeitnehmer) {
     res.abgabenlastArbeitnehmer = (res.nettoArbeitnehmer / bruttoArbeitnehmer - 1) * (-100)
 
     // Anteil Steuern AG
-    await page.waitForSelector('#primary > table:nth-child(7) > tbody > tr:nth-child(5) > td.b.text-right.view-year')
-    res.anteilSteuernArbeitgeber = (await page.$eval('#primary > table:nth-child(7) > tbody > tr:nth-child(5) > td.b.text-right.view-year', el => el.innerText.slice(0, -2).replace('.', '').replace(',', '.')) / res.bruttoArbeitgeber) * 100
+    await page.waitForSelector(`#primary > table:nth-child(${childIdPrivateKv}) > tbody > tr:nth-child(5) > td.b.text-right.view-year`)
+    res.anteilSteuernArbeitgeber = (await page.$eval(`#primary > table:nth-child(${childIdPrivateKv}) > tbody > tr:nth-child(5) > td.b.text-right.view-year`, el => el.innerText.slice(0, -2).replace('.', '').replace(',', '.')) / res.bruttoArbeitgeber) * 100
 
     // Anteil Sozialabgaben AG
-    const childId = bruttoArbeitnehmer <= 5400 ? 11 : 12
-    await page.waitForSelector(`#primary > table:nth-child(4) > tbody > tr:nth-child(${childId}) > td.b.text-right.view-year`)
-    res.anteilSozialabgabenArbeitgeber = (parseFloat(await page.$eval(`#primary > table:nth-child(4) > tbody > tr:nth-child(${childId}) > td.b.text-right.view-year`, el => el.innerText.slice(0, -2).replace('.', '').replace(',', '.'))) + (res.bruttoArbeitgeber - bruttoArbeitnehmer)) / bruttoArbeitnehmer * 100
+    const childIdSozialabgaben = bruttoArbeitnehmer <= sozialabgabenSchwelle ? 11 : 12
+    await page.waitForSelector(`#primary > table:nth-child(4) > tbody > tr:nth-child(${childIdSozialabgaben}) > td.b.text-right.view-year`)
+    res.anteilSozialabgabenArbeitgeber = (parseFloat(await page.$eval(`#primary > table:nth-child(4) > tbody > tr:nth-child(${childIdSozialabgaben}) > td.b.text-right.view-year`, el => el.innerText.slice(0, -2).replace('.', '').replace(',', '.'))) + (res.bruttoArbeitgeber - bruttoArbeitnehmer)) / bruttoArbeitnehmer * 100
 
     await navigationPromise
 
