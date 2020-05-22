@@ -84,15 +84,13 @@ async function main() {
         let abgabenlastRes = await getAbgabenlast(page, bruttoArbeitnehmer)
 
         // ugly output but I'm going to pipe it to a file so I can copy it to excel
-        console.log(abgabenlastRes.bruttoArbeitgeber); // Brutto AG
+        console.log(abgabenlastRes.bruttoArbeitgeber); // Brutto AG (Die gesamten Lohnkosten die der AG traegt)
         console.log(bruttoArbeitnehmer); // Brutto AN
         console.log(abgabenlastRes.nettoArbeitnehmer); // Netto AN
-        console.log(abgabenlastRes.abgabenlastArbeitgeber); // Abgabenlast AG
-        console.log(abgabenlastRes.abgabenlastArbeitnehmer); // Abgabenlast AN
-        console.log(abgabenlastRes.anteilSteuernArbeitgeber); // Anteil Steuern AG
-        //console.log(abgabenlastRes.anteilSteuernArbeitnehmer); // Anteil Steuern AN
-        console.log(abgabenlastRes.anteilSozialabgabenArbeitgeber + "\n"); // Anteil Sozialabgaben AG
-        //console.log(abgabenlastRes.anteilSozialabgabenArbeitnehmer + "\n"); // Anteil Sozialabgaben AN
+        console.log(abgabenlastRes.abgabenlastArbeitgeber); // Abgabenlast AG (Die gesamten Abgaben/Steuern im Verhaeltnis zum Nettolohn des AN)
+        console.log(abgabenlastRes.abgabenlastArbeitnehmer); // Abgabenlast AN (Die vom AN geleisteten Abgaben/Steuern im Verhaeltnis zum Nettolohn des AN)
+        console.log(abgabenlastRes.anteilSteuernArbeitgeber); // Anteil Steuern AG (Die Steuern im Verhaeltnis zu den Lohnkosten)
+        console.log(abgabenlastRes.anteilSozialabgabenArbeitgeber + "\n"); // Anteil Sozialabgaben AG (Die gesamten Sozialabgaben im Verhaeltnis zu den Lohnkosten)
     }
 
     await browser.close()
