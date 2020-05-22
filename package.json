@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/bttger/abgabenlast#readme",
   "dependencies": {
-    "puppeteer": "^3.1.0"
+    "puppeteer": "^3.1.0",
+    "xlsx": "^0.16.1"
   }
 }
