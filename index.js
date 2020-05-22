@@ -5,6 +5,7 @@ const endBruttoArbeitnehmer = 100000
 const step = 1000
 const sozialabgabenSchwelle = 5400
 const privateKvSchwelle = 62550
+const plz = 20095
 
 
 async function getAbgabenlast(page, bruttoArbeitnehmer) {
@@ -30,12 +31,19 @@ async function getAbgabenlast(page, bruttoArbeitnehmer) {
     await page.waitForSelector('#rechner > #form_is_church > .col-xs-6 > .radio:nth-child(2) > label')
     await page.click('#rechner > #form_is_church > .col-xs-6 > .radio:nth-child(2) > label')
 
-    // Bundesland
-    await page.waitForSelector('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id')
-    await page.click('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id')
-    await page.select('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id', '7')
-    await page.waitForSelector('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id')
-    await page.click('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id')
+    // Bundesland oder Postleitzahl
+    try {
+        await page.waitForSelector('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id', { timeout: 100 })
+        await page.click('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id')
+        await page.select('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id', '7')
+        await page.waitForSelector('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id')
+        await page.click('.col-sm-12 > #rechner > #form_state_id #salary_data_state_id')
+    } catch (e) {
+        await page.waitForSelector('#autocomplete_salary_data_geodb_loc_id')
+        await page.$eval('#autocomplete_salary_data_geodb_loc_id', (el, plz) => {
+            el.value = plz
+        }, plz)
+    }
 
     // Krankenversicherung Zusatzbeitrag eingeben
     await page.waitForSelector('.extended_form > #form_kv_satz #salary_data_kv_zuschlag')
