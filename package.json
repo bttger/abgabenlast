@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/bttger/abgabenlast/issues"
   },
-  "homepage": "https://github.com/bttger/abgabenlast#readme"
+  "homepage": "https://github.com/bttger/abgabenlast#readme",
+  "dependencies": {
+    "puppeteer": "^3.1.0"
+  }
 }
